@@ -1,4 +1,3 @@
-/* Tokens on guaranteed-present elements — fallback for all interior children */
 .vc-dwcradar-header,
 .vc-dwcradar-content {
     --dwc-a1: #5566a8;
@@ -13,8 +12,6 @@
     --dwc-field: rgba(0, 0, 0, 0.26);
 }
 
-/* Modal shell — three selectors cover: (a) className on ModalRoot's div directly,
-   (b) Discord's outer root_xxx shell when ModalRoot adds an inner wrapper div */
 [class*="root_"]:has(.vc-dwcradar-header),
 [class*="root-"]:has(.vc-dwcradar-header),
 .vc-dwcradar-root {
@@ -100,7 +97,6 @@
     flex-direction: column;
     gap: 12px;
 }
-
 
 .vc-dwcradar-scan {
     display: flex;
@@ -624,4 +620,81 @@
 .vc-dwcradar-content .vc-dwcradar-scan {
     gap: 11px;
     padding: 14px;
+}
+
+.vc-dwcradar-source-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.vc-dwcradar-source-icon[data-src="name"] {
+    color: #868d9b;
+}
+
+.vc-dwcradar-source-icon[data-src="perm"] {
+    color: var(--dwc-accent);
+}
+
+.vc-dwcradar-source-icon[data-src="owner"] {
+    color: #e2b341;
+}
+
+.vc-dwcradar-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 7px 0;
+    cursor: pointer;
+}
+
+.vc-dwcradar-toggle-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.vc-dwcradar-toggle-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #e9ecf2;
+}
+
+.vc-dwcradar-toggle-hint {
+    font-size: 11.5px;
+    color: #7d8492;
+    line-height: 1.35;
+}
+
+.vc-dwcradar-toggle {
+    flex-shrink: 0;
+    width: 38px;
+    height: 22px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.vc-dwcradar-toggle-on {
+    background: var(--dwc-accent-bg-h);
+    border-color: var(--dwc-edge);
+}
+
+.vc-dwcradar-toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #e9ecf2;
+    transition: transform 0.15s;
+}
+
+.vc-dwcradar-toggle-on .vc-dwcradar-toggle-knob {
+    transform: translateX(16px);
 }

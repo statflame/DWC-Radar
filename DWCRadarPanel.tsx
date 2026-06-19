@@ -9,12 +9,61 @@ import { Avatar, IconUtils, React, showToast, Toasts, UserStore, useMemo, useSta
 
 import { openInviteModal } from "@utils/discord";
 
-import { clearAllEntries, EXCLUDED_TERMS, extractInviteCode, parseExcludedServers, parseKeywords, removeEntry, scanAllGuilds, scanCurrentGuild, toggleHandled, useIsScanning, useStaffEntries } from "./store";
-import type { StaffEntry } from "./store";
+import { clearAllEntries, CORE_STAFF_PERM_NAMES, DEFAULT_EXCLUDED_ROLE_KEYWORDS, DEFAULT_EXCLUDED_SERVERS, DEFAULT_KEYWORDS, extractInviteCode, parseExcludedServers, parseKeywords, removeEntry, scanAllGuilds, scanCurrentGuild, toggleHandled, useIsScanning, useStaffEntries } from "./store";
+import type { DetectionOptions, DetectSource, StaffEntry } from "./store";
 
 const cl = classNameFactory("vc-dwcradar-");
 
-const KW_DEFAULT = "Mod,Moderator,Moderation,Senior Moderator,Trial Mod,Admin,Administrator,Manager,Owner,Co-Owner,Helper,Staff,Jr. Staff,Sr. Staff,Head Staff,Senior Staff,Supervisor,Trainee,Dueño,Ayudante,Soporte,Personal,Jefe,Dono,Ajudante,Equipe,Suporte,Propriétaire,Aide,Personnel,Gérant,Besitzer,Leitung,Helfer,Personale,Proprietario,Eigenaar,Beheerder,Yönetici,Sahip,Yardımcı";
+function detectionOptionsFrom(s: any): DetectionOptions {
+    return {
+        byPerm: s.detectByPermissions ?? true,
+        manageMessages: s.manageMessagesIsStaff ?? false,
+        requireHoist: s.requireHoistForPerms ?? false,
+        includeOwner: s.includeOwner ?? true,
+        excludeFriends: s.excludeFriends ?? true,
+        excludeStaffFromExcluded: s.excludeStaffFromExcluded ?? true,
+    };
+}
+
+const SOURCE_ORDER: DetectSource[] = ["owner", "perm", "name"];
+function orderSources(sources: DetectSource[]): DetectSource[] {
+    return SOURCE_ORDER.filter(s => sources.includes(s));
+}
+
+const SOURCE_META: Record<DetectSource, { title: string; }> = {
+    name: { title: "Detected by role name" },
+    perm: { title: "Detected by permission" },
+    owner: { title: "Server owner" },
+};
+
+function SourceBadge({ source }: { source: DetectSource; }) {
+    const icon = source === "name"
+        ? <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+        : source === "perm"
+            ? <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            : <path d="M3 7l4.5 3.5L12 4l4.5 6.5L21 7l-1.6 11H4.6z" />;
+    return (
+        <span className={cl("source-icon")} data-src={source} title={SOURCE_META[source].title}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={source === "owner" ? "currentColor" : "none"} stroke={source === "owner" ? "none" : "currentColor"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                {icon}
+            </svg>
+        </span>
+    );
+}
+
+function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint?: string; }) {
+    return (
+        <div className={cl("toggle-row")} onClick={() => onChange(!checked)}>
+            <div className={cl("toggle-text")}>
+                <span className={cl("toggle-label")}>{label}</span>
+                {hint && <span className={cl("toggle-hint")}>{hint}</span>}
+            </div>
+            <div className={classes(cl("toggle"), checked && cl("toggle-on"))}>
+                <div className={cl("toggle-knob")} />
+            </div>
+        </div>
+    );
+}
 
 function RadarSweepIcon({ size = 22 }: { size?: number; }) {
     return (
@@ -33,6 +82,7 @@ interface DeduplicatedEntry {
     roles: string[];
     guilds: { guildId: string; guildName?: string; }[];
     handled: boolean;
+    sources: DetectSource[];
 }
 
 function deduplicateEntries(entries: StaffEntry[]): DeduplicatedEntry[] {
@@ -47,6 +97,9 @@ function deduplicateEntries(entries: StaffEntry[]): DeduplicatedEntry[] {
             for (const r of e.roles ?? []) {
                 if (!existing.roles.includes(r)) existing.roles.push(r);
             }
+            for (const s of e.sources ?? []) {
+                if (!existing.sources.includes(s)) existing.sources.push(s);
+            }
             existing.handled = existing.handled && !!e.handled;
         } else {
             map.set(e.userId, {
@@ -55,6 +108,7 @@ function deduplicateEntries(entries: StaffEntry[]): DeduplicatedEntry[] {
                 roles: [...(e.roles ?? [])],
                 guilds: [{ guildId: e.guildId, guildName: e.guildName }],
                 handled: !!e.handled,
+                sources: [...(e.sources ?? [])],
             });
         }
     }
@@ -117,6 +171,7 @@ function StaffEntryRow({ entry }: { entry: DeduplicatedEntry; }) {
                                 {entry.guilds.length}
                             </span>
                         )}
+                        {orderSources(entry.sources).map(s => <SourceBadge key={s} source={s} />)}
                     </span>
                     {entry.roles.length > 0 && (
                         <span className={cl("entry-roles")}>{entry.roles.join(", ")}</span>
@@ -142,9 +197,13 @@ function ScanSection() {
         const keywords = parseKeywords(pluginSettings.keywords);
         const excluded = parseExcludedServers(pluginSettings.excludedServers);
         const excludedTerms = parseKeywords(pluginSettings.excludedRoleKeywords);
-        const count = scanCurrentGuild(keywords, excluded, excludedTerms);
-        if (count > 0) {
-            showToast(`Found ${count} new staff members`, Toasts.Type.SUCCESS);
+        const res = scanCurrentGuild(keywords, excluded, excludedTerms, detectionOptionsFrom(pluginSettings));
+        if (res.excluded) {
+            showToast("This server is on your exclusion list", Toasts.Type.FAILURE);
+        } else if (res.noGuild) {
+            showToast("No server selected", Toasts.Type.MESSAGE);
+        } else if (res.count > 0) {
+            showToast(`Found ${res.count} new staff members`, Toasts.Type.SUCCESS);
         } else {
             showToast("No new staff members found", Toasts.Type.MESSAGE);
         }
@@ -154,12 +213,13 @@ function ScanSection() {
         const keywords = parseKeywords(pluginSettings.keywords);
         const excluded = parseExcludedServers(pluginSettings.excludedServers);
         const excludedTerms = parseKeywords(pluginSettings.excludedRoleKeywords);
-        const count = await scanAllGuilds(keywords, excluded, excludedTerms);
-        if (count > 0) {
-            showToast(`Found ${count} new staff members across all servers`, Toasts.Type.SUCCESS);
-        } else {
-            showToast("No new staff members found", Toasts.Type.MESSAGE);
-        }
+        const res = await scanAllGuilds(keywords, excluded, excludedTerms, detectionOptionsFrom(pluginSettings));
+        const s = (n: number) => n === 1 ? "" : "s";
+        const skipNote = res.skipped > 0 ? `, skipped ${res.skipped} excluded server${s(res.skipped)}` : "";
+        showToast(
+            `Scanned ${res.scanned} server${s(res.scanned)} — found ${res.found} member${s(res.found)}${skipNote}`,
+            res.found > 0 ? Toasts.Type.SUCCESS : Toasts.Type.MESSAGE,
+        );
     };
 
     return (
@@ -268,16 +328,35 @@ function DWCRadarSettingsModal(props: ModalProps) {
     const [excludedRoleKw, setExcludedRoleKw] = useState(s.excludedRoleKeywords ?? "");
     const [inviteList, setInviteList] = useState(s.inviteList ?? "");
 
+    const [detectPerm, setDetectPerm] = useState(s.detectByPermissions ?? true);
+    const [manageMsg, setManageMsg] = useState(s.manageMessagesIsStaff ?? false);
+    const [reqHoist, setReqHoist] = useState(s.requireHoistForPerms ?? false);
+    const [inclOwner, setInclOwner] = useState(s.includeOwner ?? true);
+    const [exFriends, setExFriends] = useState(s.excludeFriends ?? true);
+    const [exStaff, setExStaff] = useState(s.excludeStaffFromExcluded ?? true);
+
     const upKeywords = (v: string) => { setKeywords(v); s.keywords = v; };
     const upExServers = (v: string) => { setExcludedServers(v); s.excludedServers = v; };
     const upExRole = (v: string) => { setExcludedRoleKw(v); s.excludedRoleKeywords = v; };
     const upInvite = (v: string) => { setInviteList(v); s.inviteList = v; };
+    const upDetectPerm = (v: boolean) => { setDetectPerm(v); s.detectByPermissions = v; };
+    const upManageMsg = (v: boolean) => { setManageMsg(v); s.manageMessagesIsStaff = v; };
+    const upReqHoist = (v: boolean) => { setReqHoist(v); s.requireHoistForPerms = v; };
+    const upInclOwner = (v: boolean) => { setInclOwner(v); s.includeOwner = v; };
+    const upExFriends = (v: boolean) => { setExFriends(v); s.excludeFriends = v; };
+    const upExStaff = (v: boolean) => { setExStaff(v); s.excludeStaffFromExcluded = v; };
 
     const resetDefaults = () => {
-        upKeywords(KW_DEFAULT);
-        upExServers("");
-        upExRole("");
+        upKeywords(DEFAULT_KEYWORDS);
+        upExServers(DEFAULT_EXCLUDED_SERVERS);
+        upExRole(DEFAULT_EXCLUDED_ROLE_KEYWORDS);
         upInvite("");
+        upDetectPerm(true);
+        upManageMsg(false);
+        upReqHoist(false);
+        upInclOwner(true);
+        upExFriends(true);
+        upExStaff(true);
     };
 
     const csv = (v: string) => v.split(",").map(x => x.trim()).filter(Boolean);
@@ -315,6 +394,40 @@ function DWCRadarSettingsModal(props: ModalProps) {
             </ModalHeader>
 
             <ModalContent className={cl("content")}>
+                <SettingsPanel
+                    title="Detection"
+                    hint="How members get flagged as staff. Permission detection catches staff roles that keywords miss."
+                    icon={
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    }
+                >
+                    <Toggle checked={detectPerm} onChange={upDetectPerm}
+                        label="Permission detection"
+                        hint="Flag roles that hold staff permissions (ban, kick, manage, timeout) regardless of name." />
+                    <Toggle checked={manageMsg} onChange={upManageMsg}
+                        label="Count Manage Messages"
+                        hint="Also treat Manage Messages as staff. Catches more roles, less precise." />
+                    <Toggle checked={reqHoist} onChange={upReqHoist}
+                        label="Require hoisted role"
+                        hint="Permission matches only count if the role is displayed separately from online members." />
+                    <Toggle checked={inclOwner} onChange={upInclOwner}
+                        label="Include server owner"
+                        hint="Always add the owner, even when they have no staff role." />
+                    <Toggle checked={exFriends} onChange={upExFriends}
+                        label="Exclude friends"
+                        hint="Never flag your friends, even if they hold a staff role." />
+                    <Toggle checked={exStaff} onChange={upExStaff}
+                        label="Exclude staff of excluded servers"
+                        hint="Skip members who are also staff on one of your excluded servers (scans those servers' rosters to find them)." />
+                    <div className={cl("settings-label")} style={{ marginTop: 6 }}>Permissions checked</div>
+                    <div className={cl("chips")}>
+                        {CORE_STAFF_PERM_NAMES.map(t => <span key={t} className={cl("chip-muted")}>{t}</span>)}
+                        {manageMsg && <span className={cl("chip-accent")}>Manage Messages</span>}
+                    </div>
+                </SettingsPanel>
+
                 <SettingsPanel
                     title="Detection Keywords"
                     hint="Comma-separated. A member is flagged when any of their role names contains one of these."
@@ -364,7 +477,7 @@ function DWCRadarSettingsModal(props: ModalProps) {
                         </svg>
                     }
                 >
-                    <input type="text" className={cl("settings-input")} value={excludedRoleKw}
+                    <textarea className={cl("invite-textarea")} value={excludedRoleKw} rows={3}
                         placeholder="retired, ping, former…"
                         onChange={e => upExRole(e.currentTarget.value)} />
                 </SettingsPanel>
@@ -384,17 +497,6 @@ function DWCRadarSettingsModal(props: ModalProps) {
                         onChange={e => upInvite(e.currentTarget.value)} />
                 </SettingsPanel>
 
-                <div className={cl("scan")}>
-                    <div className={cl("settings-head")}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#868d9b" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                        <span className={cl("settings-head-title")} style={{ fontSize: 13 }}>Built-in Exclusions</span>
-                    </div>
-                    <div className={cl("chips")}>
-                        {EXCLUDED_TERMS.map(t => <span key={t} className={cl("chip-muted")}>{t}</span>)}
-                    </div>
-                </div>
             </ModalContent>
         </ModalRoot>
     );

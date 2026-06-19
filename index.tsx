@@ -9,7 +9,8 @@ import { openModal } from "@utils/modal";
 import { GuildStore, Menu, showToast, Toasts } from "@webpack/common";
 
 import { DWCRadarModal } from "./DWCRadarPanel";
-import { extractInviteCode, leaveAllGuilds, loadStoredEntries, parseExcludedServers, parseKeywords, scanGuild } from "./store";
+import { DEFAULT_EXCLUDED_ROLE_KEYWORDS, DEFAULT_EXCLUDED_SERVERS, DEFAULT_KEYWORDS, extractInviteCode, leaveAllGuilds, loadStoredEntries, parseExcludedServers, parseKeywords, scanGuild } from "./store";
+import type { DetectionOptions } from "./store";
 
 import style from "./style.css?managed";
 
@@ -17,26 +18,67 @@ function getExcludedTerms(): string[] {
     return parseKeywords(settings.store.excludedRoleKeywords);
 }
 
+function getDetectionOptions(): DetectionOptions {
+    return {
+        byPerm: settings.store.detectByPermissions,
+        manageMessages: settings.store.manageMessagesIsStaff,
+        requireHoist: settings.store.requireHoistForPerms,
+        includeOwner: settings.store.includeOwner,
+        excludeFriends: settings.store.excludeFriends,
+        excludeStaffFromExcluded: settings.store.excludeStaffFromExcluded,
+    };
+}
+
 const settings = definePluginSettings({
     keywords: {
         type: OptionType.STRING,
         description: "Comma-separated keywords to match against role names",
-        default: "Mod,Moderator,Moderation,Senior Moderator,Trial Mod,Admin,Administrator,Manager,Owner,Co-Owner,Helper,Staff,Jr. Staff,Sr. Staff,Head Staff,Senior Staff,Supervisor,Trainee,Dueño,Ayudante,Soporte,Personal,Jefe,Dono,Ajudante,Equipe,Suporte,Propriétaire,Aide,Personnel,Gérant,Besitzer,Leitung,Helfer,Personale,Proprietario,Eigenaar,Beheerder,Yönetici,Sahip,Yardımcı",
+        default: DEFAULT_KEYWORDS,
     },
     excludedServers: {
         type: OptionType.STRING,
         description: "Comma-separated server IDs to never scan (right-click a server > Copy Server ID)",
-        default: "",
+        default: DEFAULT_EXCLUDED_SERVERS,
     },
     excludedRoleKeywords: {
         type: OptionType.STRING,
-        description: "Comma-separated keywords to exclude roles (e.g. retired,ping,former)",
-        default: "",
+        description: "Comma-separated keywords to exclude roles (defaults to the built-in exclusion list; remove any you don't want)",
+        default: DEFAULT_EXCLUDED_ROLE_KEYWORDS,
     },
     inviteList: {
         type: OptionType.STRING,
         description: "Invite links to join (one per line). Processed top-to-bottom.",
         default: "",
+    },
+    detectByPermissions: {
+        type: OptionType.BOOLEAN,
+        description: "Detect staff by role permissions (ban/kick/manage/timeout), not only by role name",
+        default: true,
+    },
+    manageMessagesIsStaff: {
+        type: OptionType.BOOLEAN,
+        description: "Also treat 'Manage Messages' as a staff permission (catches more, less precise)",
+        default: false,
+    },
+    requireHoistForPerms: {
+        type: OptionType.BOOLEAN,
+        description: "Permission matches only count if the role is hoisted (displayed separately)",
+        default: false,
+    },
+    includeOwner: {
+        type: OptionType.BOOLEAN,
+        description: "Always include the server owner, even with no staff role",
+        default: true,
+    },
+    excludeFriends: {
+        type: OptionType.BOOLEAN,
+        description: "Never flag your friends, even if they hold a staff role",
+        default: true,
+    },
+    excludeStaffFromExcluded: {
+        type: OptionType.BOOLEAN,
+        description: "Skip members who are also staff on one of your excluded servers",
+        default: true,
     },
 });
 
@@ -110,7 +152,7 @@ const GuildContextMenuPatch: NavContextMenuPatchCallback = (children, { guild }:
             label="Scan for Staff"
             action={() => {
                 const keywords = parseKeywords(settings.store.keywords);
-                scanGuild(guild.id, guild.name, keywords, excluded, getExcludedTerms());
+                scanGuild(guild.id, guild.name, keywords, excluded, getExcludedTerms(), getDetectionOptions());
                 openDWCRadarModal();
             }}
         />
@@ -173,7 +215,7 @@ export default definePlugin({
             if (excluded.has(guildId)) return;
 
             setTimeout(() => {
-                const count = scanGuild(guildId, guildName, keywords, excluded, getExcludedTerms());
+                const count = scanGuild(guildId, guildName, keywords, excluded, getExcludedTerms(), getDetectionOptions());
                 if (count > 0) {
                     Notifications.showNotification({
                         title: "DWC Radar",
