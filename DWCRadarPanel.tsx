@@ -421,11 +421,15 @@ function DWCRadarSettingsModal(props: ModalProps) {
                     <Toggle checked={exStaff} onChange={upExStaff}
                         label="Exclude staff of excluded servers"
                         hint="Skip members who are also staff on one of your excluded servers (scans those servers' rosters to find them)." />
-                    <div className={cl("settings-label")} style={{ marginTop: 6 }}>Permissions checked</div>
-                    <div className={cl("chips")}>
-                        {CORE_STAFF_PERM_NAMES.map(t => <span key={t} className={cl("chip-muted")}>{t}</span>)}
-                        {manageMsg && <span className={cl("chip-accent")}>Manage Messages</span>}
-                    </div>
+                    {detectPerm && (
+                        <>
+                            <div className={cl("settings-label")} style={{ marginTop: 6 }}>Permissions checked</div>
+                            <div className={cl("chips")}>
+                                {CORE_STAFF_PERM_NAMES.map(t => <span key={t} className={cl("chip-muted")}>{t}</span>)}
+                                {manageMsg && <span className={cl("chip-accent")}>Manage Messages</span>}
+                            </div>
+                        </>
+                    )}
                 </SettingsPanel>
 
                 <SettingsPanel
