@@ -1,0 +1,627 @@
+/* Tokens on guaranteed-present elements — fallback for all interior children */
+.vc-dwcradar-header,
+.vc-dwcradar-content {
+    --dwc-a1: #5566a8;
+    --dwc-a2: #3f7e9a;
+    --dwc-accent: #8fa3cf;
+    --dwc-edge: rgba(120, 140, 200, 0.30);
+    --dwc-chip: rgba(120, 140, 200, 0.13);
+    --dwc-accent-bg: rgba(85, 102, 168, 0.30);
+    --dwc-accent-bg-h: rgba(85, 102, 168, 0.45);
+    --dwc-glow: rgba(85, 102, 168, 0.28);
+    --dwc-panel: rgba(255, 255, 255, 0.028);
+    --dwc-field: rgba(0, 0, 0, 0.26);
+}
+
+/* Modal shell — three selectors cover: (a) className on ModalRoot's div directly,
+   (b) Discord's outer root_xxx shell when ModalRoot adds an inner wrapper div */
+[class*="root_"]:has(.vc-dwcradar-header),
+[class*="root-"]:has(.vc-dwcradar-header),
+.vc-dwcradar-root {
+    --dwc-a1: #5566a8;
+    --dwc-a2: #3f7e9a;
+    --dwc-accent: #8fa3cf;
+    --dwc-edge: rgba(120, 140, 200, 0.30);
+    --dwc-chip: rgba(120, 140, 200, 0.13);
+    --dwc-accent-bg: rgba(85, 102, 168, 0.30);
+    --dwc-accent-bg-h: rgba(85, 102, 168, 0.45);
+    --dwc-glow: rgba(85, 102, 168, 0.28);
+    --dwc-panel: rgba(255, 255, 255, 0.028);
+    --dwc-field: rgba(0, 0, 0, 0.26);
+
+    background: linear-gradient(168deg, rgba(32, 36, 46, 0.92), rgba(18, 21, 28, 0.96)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-radius: 16px !important;
+    position: relative !important;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 24px 70px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(120, 140, 200, 0.12),
+        0 0 40px -8px rgba(85, 102, 168, 0.40) !important;
+    overflow: hidden !important;
+}
+
+[class*="root_"]:has(.vc-dwcradar-header)::before,
+[class*="root-"]:has(.vc-dwcradar-header)::before,
+.vc-dwcradar-root::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--dwc-edge), transparent);
+    z-index: 3;
+    pointer-events: none;
+}
+
+.vc-dwcradar-header {
+    gap: 11px;
+    padding: 16px 18px 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vc-dwcradar-title {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    color: #f1f3f7;
+    letter-spacing: -0.2px;
+}
+
+.vc-dwcradar-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 21px;
+    padding: 0 7px;
+    border-radius: 7px;
+    background: var(--dwc-chip);
+    border: 1px solid var(--dwc-edge);
+    color: var(--dwc-accent);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.vc-dwcradar-header-actions {
+    display: flex;
+    gap: 7px;
+    flex-shrink: 0;
+}
+
+.vc-dwcradar-content {
+    padding: 14px 18px 18px !important;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.vc-dwcradar-scan {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    margin: 0;
+    flex-shrink: 0;
+    background: var(--dwc-panel);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    overflow: hidden;
+}
+
+.vc-dwcradar-scan-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.vc-dwcradar-scan-label {
+    margin: 0 !important;
+    color: #eef0f4;
+    font-weight: 600;
+    font-size: 13.5px;
+}
+
+.vc-dwcradar-scan-icon {
+    flex-shrink: 0;
+    color: var(--dwc-accent);
+}
+
+.vc-dwcradar-scan-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.vc-dwcradar-scan-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.vc-dwcradar-scan-sub {
+    font-size: 11.5px;
+    color: #7d8492;
+    line-height: 1.3;
+}
+
+.vc-dwcradar-scan-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.vc-dwcradar-invite-textarea,
+.vc-dwcradar-settings-input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    padding: 9px 11px;
+    background: var(--dwc-field);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 9px;
+    color: #cfd4dd;
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.vc-dwcradar-invite-textarea {
+    min-height: 76px;
+    padding-right: 16px;
+    scrollbar-gutter: stable;
+    font-family: var(--font-code);
+    font-size: 12px;
+    line-height: 1.65;
+    resize: none;
+}
+
+.vc-dwcradar-invite-textarea::-webkit-scrollbar {
+    width: 10px;
+}
+
+.vc-dwcradar-invite-textarea::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+}
+
+.vc-dwcradar-invite-textarea::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.13);
+    border-radius: 8px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+.vc-dwcradar-invite-textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+    background-clip: padding-box;
+}
+
+.vc-dwcradar-invite-textarea:focus,
+.vc-dwcradar-settings-input:focus {
+    border-color: var(--dwc-edge);
+    box-shadow: 0 0 0 3px var(--dwc-glow);
+}
+
+.vc-dwcradar-invite-textarea::placeholder,
+.vc-dwcradar-settings-input::placeholder {
+    color: #646b79;
+}
+
+.vc-dwcradar-settings-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 2px;
+}
+
+.vc-dwcradar-settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vc-dwcradar-settings-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #727988;
+}
+
+.vc-dwcradar-settings-builtin {
+    padding: 9px 11px;
+    background: var(--dwc-field);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 9px;
+    color: #868d9b;
+    font-size: 11.5px;
+    line-height: 1.7;
+    word-break: break-word;
+}
+
+.vc-dwcradar-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 13px;
+    margin: 0;
+    flex-shrink: 0;
+    background: var(--dwc-field);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 11px;
+}
+
+.vc-dwcradar-search-icon {
+    flex-shrink: 0;
+    color: #727988;
+}
+
+.vc-dwcradar-search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #e9ecf2;
+    font-size: 13.5px;
+}
+
+.vc-dwcradar-search-input::placeholder {
+    color: #727988;
+}
+
+.vc-dwcradar-search-count {
+    flex-shrink: 0;
+    font-family: var(--font-code);
+    font-size: 12px;
+    color: #727988;
+}
+
+.vc-dwcradar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.vc-dwcradar-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 11px;
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    background: rgba(255, 255, 255, 0.018);
+    border-radius: 11px;
+    transition: background-color 0.12s, border-color 0.12s, opacity 0.15s;
+}
+
+.vc-dwcradar-entry:hover {
+    background: rgba(255, 255, 255, 0.045);
+    border-color: rgba(255, 255, 255, 0.11);
+}
+
+.vc-dwcradar-entry-handled {
+    opacity: 0.42;
+}
+
+.vc-dwcradar-entry-handled .vc-dwcradar-entry-name {
+    text-decoration: line-through;
+}
+
+.vc-dwcradar-checkbox {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    accent-color: var(--dwc-a1);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.vc-dwcradar-entry-left {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+}
+
+.vc-dwcradar-avatar {
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.vc-dwcradar-avatar-fallback {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--dwc-a1), var(--dwc-a2));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.vc-dwcradar-entry-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.vc-dwcradar-entry-name {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f1f3f7;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.vc-dwcradar-server-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 5px;
+    border-radius: 7px;
+    background: var(--dwc-chip);
+    border: 1px solid var(--dwc-edge);
+    color: var(--dwc-accent);
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    cursor: default;
+}
+
+.vc-dwcradar-entry-roles {
+    font-size: 11.5px;
+    color: var(--dwc-accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.vc-dwcradar-entry-id {
+    font-family: var(--font-code);
+    font-size: 11px;
+    color: #646b79;
+    user-select: all;
+    letter-spacing: 0.2px;
+    line-height: 1.3;
+}
+
+.vc-dwcradar-entry-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+.vc-dwcradar-entry:hover .vc-dwcradar-entry-actions {
+    opacity: 1;
+}
+
+.vc-dwcradar-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    padding: 34px 20px;
+    text-align: center;
+    color: #a4abb8;
+}
+
+.vc-dwcradar-empty-icon {
+    opacity: 0.4;
+    margin-bottom: 2px;
+    color: var(--dwc-accent);
+}
+
+.vc-dwcradar-empty p {
+    margin: 0;
+    font-size: 13.5px;
+}
+
+.vc-dwcradar-empty-hint {
+    font-size: 12px !important;
+    color: #727988;
+}
+
+.vc-dwcradar-header-actions button,
+.vc-dwcradar-scan-actions button {
+    border-radius: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #d6dae3 !important;
+    font-weight: 600 !important;
+    transition: background 0.12s, border-color 0.12s, color 0.12s !important;
+}
+
+.vc-dwcradar-header-actions button:hover,
+.vc-dwcradar-scan-actions button:hover {
+    border-color: var(--dwc-accent) !important;
+    background: rgba(255, 255, 255, 0.10) !important;
+    color: #fff !important;
+}
+
+.vc-dwcradar-header-actions button[class*="colorBrand"],
+.vc-dwcradar-header-actions button[class*="lookFilled"],
+.vc-dwcradar-scan-actions button[class*="colorBrand"],
+.vc-dwcradar-scan-actions button[class*="lookFilled"] {
+    background: var(--dwc-accent-bg) !important;
+    border: 1px solid var(--dwc-edge) !important;
+    color: #eef1ff !important;
+}
+
+.vc-dwcradar-header-actions button[class*="colorBrand"]:hover,
+.vc-dwcradar-header-actions button[class*="lookFilled"]:hover,
+.vc-dwcradar-scan-actions button[class*="colorBrand"]:hover,
+.vc-dwcradar-scan-actions button[class*="lookFilled"]:hover {
+    background: var(--dwc-accent-bg-h) !important;
+    border-color: var(--dwc-accent) !important;
+    color: #fff !important;
+}
+
+.vc-dwcradar-header-actions button[class*="colorRed"],
+.vc-dwcradar-header-actions button[class*="colorDanger"] {
+    background: rgba(190, 70, 80, 0.12) !important;
+    border: 1px solid rgba(214, 108, 116, 0.20) !important;
+    color: #e79aa1 !important;
+}
+
+.vc-dwcradar-header-actions button[class*="colorRed"]:hover,
+.vc-dwcradar-header-actions button[class*="colorDanger"]:hover {
+    background: rgba(190, 70, 80, 0.22) !important;
+    border-color: rgba(214, 108, 116, 0.40) !important;
+    color: #f2c2c6 !important;
+}
+
+.vc-dwcradar-entry-actions button {
+    border-radius: 7px !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #cdd2db !important;
+    font-weight: 600 !important;
+    transition: background 0.12s, border-color 0.12s, color 0.12s !important;
+}
+
+.vc-dwcradar-entry-actions button:hover {
+    border-color: var(--dwc-accent) !important;
+    background: rgba(255, 255, 255, 0.10) !important;
+    color: #fff !important;
+}
+
+.vc-dwcradar-entry-actions button[class*="colorRed"],
+.vc-dwcradar-entry-actions button[class*="colorDanger"] {
+    background: rgba(190, 70, 80, 0.10) !important;
+    border: 1px solid rgba(214, 108, 116, 0.18) !important;
+    color: #e79aa1 !important;
+}
+
+.vc-dwcradar-entry-actions button[class*="colorRed"]:hover,
+.vc-dwcradar-entry-actions button[class*="colorDanger"]:hover {
+    background: rgba(190, 70, 80, 0.24) !important;
+    border-color: rgba(214, 108, 116, 0.45) !important;
+    color: #f2c2c6 !important;
+}
+
+.vc-dwcradar-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #b6bcc8;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.vc-dwcradar-back-btn:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.09);
+    color: #fff;
+}
+
+.vc-dwcradar-settings-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.vc-dwcradar-settings-head-icon {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: var(--dwc-chip);
+    border: 1px solid var(--dwc-edge);
+    color: var(--dwc-accent);
+}
+
+.vc-dwcradar-settings-head-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.vc-dwcradar-settings-head-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #eef0f4;
+}
+
+.vc-dwcradar-settings-head-hint {
+    font-size: 11.5px;
+    color: #7d8492;
+    line-height: 1.4;
+}
+
+.vc-dwcradar-settings-head-count {
+    flex-shrink: 0;
+    font-family: var(--font-code);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dwc-accent);
+    background: var(--dwc-chip);
+    border: 1px solid var(--dwc-edge);
+    border-radius: 7px;
+    padding: 2px 7px;
+}
+
+.vc-dwcradar-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.vc-dwcradar-chip-accent {
+    padding: 3px 9px;
+    border-radius: 7px;
+    background: var(--dwc-chip);
+    border: 1px solid var(--dwc-edge);
+    color: var(--dwc-accent);
+    font-size: 11px;
+}
+
+.vc-dwcradar-chip-muted {
+    padding: 3px 9px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #868d9b;
+    font-size: 11px;
+}
+
+.vc-dwcradar-content .vc-dwcradar-scan {
+    gap: 11px;
+    padding: 14px;
+}
