@@ -1,6 +1,10 @@
 # DWCRadar
 
-Vencord plugin that scans servers for staff-role members and collects their IDs for DWC bulk actions.
+Vibecoded Vencord plugin that scans servers for staff-role members and collects their IDs for DWC bulk actions.
+
+## Screenshots
+<img width="1223" height="813" alt="image" src="https://github.com/user-attachments/assets/5afe21dd-1362-47d1-bd44-94767060dbde" />
+
 
 ## Features
 
